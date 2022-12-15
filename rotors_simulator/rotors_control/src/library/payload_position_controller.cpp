@@ -13,12 +13,12 @@ PayloadPositionController::PayloadPositionController()
 	: initialized_params_(false),
 	  controller_active_(false)
 {
-
 }
 
 PayloadPositionController::~PayloadPositionController() {}
 
-void PayloadPositionController::CalculateControlInput(nav_msgs::Odometry* iris1_control_input, nav_msgs::Odometry* iris2_control_input, nav_msgs::Odometry* error, Eigen::Vector4d* iris1_control_input_vec, Eigen::Vector4d* iris2_control_input_vec)
+void PayloadPositionController::CalculateControlInput(nav_msgs::Odometry* iris1_control_input, 
+nav_msgs::Odometry* iris2_control_input, nav_msgs::Odometry* error, Eigen::Vector4d* iris1_control_input_vec, Eigen::Vector4d* iris2_control_input_vec)
 {
 	
 	// compute b_3_d and the acceleration
@@ -83,7 +83,6 @@ void PayloadPositionController::CalculateControlInput(nav_msgs::Odometry* iris1_
 	*iris2_control_input_vec = iris2_thrust_moment;
 
 }
-
 
 void PayloadPositionController::ComputeQuadStates(Eigen::Vector3d* x1 ,Eigen::Vector3d* x2 ,Eigen::Vector3d* v1,Eigen::Vector3d* v2)
 {
@@ -163,12 +162,12 @@ void PayloadPositionController::ComputeUstar(Eigen::MatrixXd* u_star, Eigen::Vec
 	float y = odometry_.orientation.y();
 	float z = odometry_.orientation.z();
 	float A_yaw = atan2((2.0 * (w * z + x * y)),(1.0 - 2.0 * (y*y + z* z)));
-	
+	// std::cout << A_yaw << std::endl;
 	//desired_control_input << 1.0,2.0,3.0,4.0;
-	A <<    1 ,                    0,                    0,  0,  1,                    0,                   0, 0, 
-                0 ,  cos(A_yaw),  -sin(A_yaw),  0,  0,  cos(A_yaw), -sin(A_yaw), 0,
-               -0.6 ,  sin(A_yaw),   cos(A_yaw),  0,  0.6,  sin(A_yaw),  cos(A_yaw), 0,
-                0 ,                    0,                    0,  1,  0,                    0,                    0, 1; 
+	A <<    1 ,                    0,                   0,        0,  1,                    0,                   0, 0, 
+            0 ,              cos(A_yaw),           -sin(A_yaw),   0,  0,  cos(A_yaw), -sin(A_yaw), 0,
+         -0.6 ,              sin(A_yaw),            cos(A_yaw),   0,  0.6,  sin(A_yaw),  cos(A_yaw), 0,
+            0 ,                    0,                   0,        1,  0,                    0,                    0, 1; 
 	A_T = A.transpose();
 	H<< 	sqrt(2),            0,         0,          0,           0,            0,           0,           0,
                           0,  sqrt(2),          0,          0,           0,            0,           0,           0,
@@ -180,15 +179,15 @@ void PayloadPositionController::ComputeUstar(Eigen::MatrixXd* u_star, Eigen::Vec
                           0,           0,          0,          0,            0,            0,           0, sqrt(2);			
 	*u_star = (H.inverse()*H.inverse()*A_T*(A*(H.inverse()*H.inverse())*A_T).inverse())* (*desired_control_input);	
 	
-	//std::cout << "-------------A-------------"<<std::endl;
-	//std::cout << A <<std::endl;
-	//std::cout << "-------------Desired control input-------"<<std::endl;
-	//std::cout << *desired_control_input <<std::endl;
-	//std::cout << "-------------USTAR-------------"<<std::endl;
-	//std::cout << (*u_star)(0,0) <<std::endl;
-	//std::cout << (*u_star)(4,0) <<std::endl;
-	//std::cout << "-------------A*u_star-----------" <<std::endl;
-	//std::cout << A*(*u_star) <<std::endl;
+	std::cout << "-------------A-------------"<<std::endl;
+	std::cout << A <<std::endl;
+	std::cout << "-------------Desired control input-------"<<std::endl;
+	std::cout << *desired_control_input <<std::endl;
+	std::cout << "-------------USTAR-------------"<<std::endl;
+	std::cout << (*u_star)(0,0) <<std::endl;
+	std::cout << (*u_star)(4,0) <<std::endl;
+	std::cout << "-------------A*u_star-----------" <<std::endl;
+	std::cout << A*(*u_star) <<std::endl;
 }
 
 
@@ -246,23 +245,6 @@ void PayloadPositionController::ComputeDesiredForce(Eigen::Vector3d* force_contr
 	                        + velocity_error.cwiseProduct(controller_parameters_.velocity_gain_))
 	                       - phy.m_system * vehicle_parameters_.gravity_  * e_3
 	                       - phy.m_system * command_trajectory_.acceleration_W;
-	
-	//std::cout << "phy.m_system\n" << phy.m_system <<std::endl;
-	//std::cout << "phy.I_system\n" << phy.I_system <<std::endl;
-
-	//debug
-	/*
-	Eigen::Vector3d first_term, second_term, third_term, forth_term;
-	first_term = position_error.cwiseProduct(controller_parameters_.position_gain_);
-	std::cout << "position_error.cwiseProduct(controller_parameters_.position_gain_)\n" << first_term << std::endl;
-	second_term = velocity_error.cwiseProduct(controller_parameters_.velocity_gain_);
-	std::cout << "velocity_error.cwiseProduct(controller_parameters_.velocity_gain_)\n" << second_term << std::endl;
-	third_term = -phy.m_system * vehicle_parameters_.gravity_  * e_3;
-	std::cout << "- phy.m_system * vehicle_parameters_.gravity_  * e_3\n" << third_term << std::endl;
-	forth_term = -phy.m_system * command_trajectory_.acceleration_W ;
-	std::cout << "- phy.m_system * command_trajectory_.acceleration_W\n" << forth_term << std::endl;
-	*/
-	//std::cout << "*force_control_input\n" << *force_control_input << std::endl;
 }
 
 // Implementation from the T. Payload et al. paper
@@ -282,12 +264,6 @@ void PayloadPositionController::ComputeDesiredMoment(const Eigen::Vector3d& forc
 	// Get the desired rotation matrix.
 	// b_1_d is the time derivative of desired trajectory
 	Eigen::Vector3d b1_des;
-	// yaw rotate function 
-	/*double yaw = atan2(  command_trajectory_.velocity_W(1),command_trajectory_.velocity_W(0) );
-	if(yaw <0 ) {
-		//yaw+=6.28;
-		yaw+=0.1;
-	}*/
 
 	double yaw = command_trajectory_.getYaw();
 	b1_des << cos(yaw), sin(yaw), 0;

@@ -42,11 +42,7 @@ LeePositionControllerNode::LeePositionControllerNode(const
 	iris1_control_input_sub_ = nh_.subscribe(
 	                   "/iris1_control_input", 1,
 	                   &LeePositionControllerNode::ControlInputCallback, this);				   
-	/*
-	cmd_multi_dof_joint_trajectory_sub_ = nh_.subscribe(
-	                mav_msgs::default_topics::COMMAND_TRAJECTORY, 1,
-	                &LeePositionControllerNode::MultiDofJointTrajectoryCallback, this);
-	*/
+
 	odometry_sub_ = nh_.subscribe(mav_msgs::default_topics::ODOMETRY, 1,
 	                              &LeePositionControllerNode::OdometryCallback, this);
 
@@ -129,23 +125,7 @@ void LeePositionControllerNode::CommandCallback(
 void LeePositionControllerNode::ControlInputCallback(
         const nav_msgs::OdometryConstPtr& control_input_msg)
 {	
-	//EigenOdometry control_input;
-	//eigenOdometryFromMsg(control_input_msg, &control_input);
-	/*
-	std::cout << "-----------------start------------------" << std::endl;
-	std::cout << control_input_msg->pose.pose.orientation.x << std::endl;
-	std::cout << control_input_msg->pose.pose.orientation.y << std::endl;
-	std::cout << control_input_msg->pose.pose.orientation.z << std::endl;
-	std::cout << control_input_msg->pose.pose.orientation.w << std::endl;
-	*/ 
-	//std::cout << "------------------end-------------------" << std::endl;
-	/*
-	std::cout << "-----------------start------------------" << std::endl;
-	std::cout << control_input.orientation.x() << std::endl;
-	std::cout << control_input.orientation.y() << std::endl;
-	std::cout << control_input.orientation.z() << std::endl;
-	std::cout << control_input.orientation.w() << std::endl;*/
-	
+
 	// CalculateRotorVelocities() is called to calculate rotor velocities and put into ref_rotor_velocities
 	Eigen::VectorXd ref_rotor_velocities;
 	nav_msgs::Odometry error;
@@ -178,47 +158,7 @@ void LeePositionControllerNode::Set_rotor_vel_multiarray_1(Eigen::Vector4d tmp){
 	iris1_original_rotor_vel.data.insert(iris1_original_rotor_vel.data.end(), vec1.begin(), vec1.end());
 }
 
-/*
-void LeePositionControllerNode::MultiDofJointTrajectoryCallback(
-        const trajectory_msgs::MultiDOFJointTrajectoryConstPtr& msg)
-{
-	// Clear all pending commands.
-	command_timer_.stop();
-	commands_.clear();
-	command_waiting_times_.clear();
 
-	const size_t n_commands = msg->points.size();
-
-	if(n_commands < 1) {
-		ROS_WARN_STREAM("Got MultiDOFJointTrajectory message, but message has no points.");
-		return;
-	}
-
-	mav_msgs::EigenTrajectoryPoint eigen_reference;
-	mav_msgs::eigenTrajectoryPointFromMsg(msg->points.front(), &eigen_reference);
-	commands_.push_front(eigen_reference);
-
-	for (size_t i = 1; i < n_commands; ++i) {
-		const trajectory_msgs::MultiDOFJointTrajectoryPoint& reference_before = msg->points[i-1];
-		const trajectory_msgs::MultiDOFJointTrajectoryPoint& current_reference = msg->points[i];
-
-		mav_msgs::eigenTrajectoryPointFromMsg(current_reference, &eigen_reference);
-
-		commands_.push_back(eigen_reference);
-		command_waiting_times_.push_back(current_reference.time_from_start - reference_before.time_from_start);
-	}
-
-	// We can trigger the first command immediately.
-	lee_position_controller_.SetTrajectoryPoint(commands_.front());
-	commands_.pop_front();
-
-	if (n_commands > 1) {
-		command_timer_.setPeriod(command_waiting_times_.front());
-		command_waiting_times_.pop_front();
-		command_timer_.start();
-	}
-}
-*/
 void LeePositionControllerNode::TimedCommandCallback(const ros::TimerEvent& e)
 {
 	if(commands_.empty()) {

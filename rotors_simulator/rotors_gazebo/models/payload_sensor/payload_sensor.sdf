@@ -1,0 +1,72 @@
+<?xml version='1.0'?>
+<sdf version='1.5'>
+<model name="payload_sensor">
+        <static>false</static>
+
+<link name="payload_sensor_imu">
+    <pose>0  0  0 0  0  0</pose>
+	  <gravity>1</gravity>
+    <inertial>
+        <inertia>
+          <ixx>0.01</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.01</iyy>
+          <iyz>0</iyz>
+          <izz>0.01</izz>
+        </inertia>
+        <mass>0.01</mass>
+    </inertial>
+
+    <collision name="collision_IMU">
+        <geometry>
+          <box>
+            <size>0.02 0.02 0.01</size>
+            </box>
+        </geometry>
+    </collision>
+
+    <visual name="visual_IMU">
+        <geometry>
+          <box>
+            <size>0.02 0.02 0.01</size>
+            </box>
+        </geometry>
+        <material>
+          <ambient>0 0 0 1</ambient>
+            <diffuse>0 0 0 1</diffuse>
+            <specular>0 0 0 0</specular>
+            <emissive>0 1 0 1</emissive>
+        </material>
+    </visual>
+
+    <sensor name="IMU" type="imu">
+        <always_on>true</always_on>
+        <update_rate>400</update_rate>
+        <plugin name="IMU_plugin" filename="libgazebo_ros_imu_sensor.so">
+          <topicName>/groundtruth/imu</topicName>
+          <bodyName>imu_link</bodyName>
+          <updateRateHZ>400</updateRateHZ>
+          <gaussianNoise>0.0</gaussianNoise>
+          <frameName>imu_link</frameName>
+        </plugin>
+    </sensor>
+
+
+</link>
+
+
+  <plugin name="p3d_base_controller" filename='libgazebo_ros_p3d.so'>
+    <alwaysOn>true</alwaysOn>
+    <bodyName>payload_sensor_imu</bodyName>
+    <frameName>world</frameName>
+    <updateRate>400</updateRate>
+    <xyzOffsets>0.0 0.0 0.0</xyzOffsets>
+    <rpyOffsets>0.0 0.0 0.0</rpyOffsets>
+    <updateRateHZ>400</updateRateHZ>
+    <topicName>/sensor_pack/groundtruth/pose</topicName>
+  </plugin>
+
+</model>
+
+</sdf>

@@ -72,12 +72,7 @@ void LeePositionController::CalculateRotorVelocities(Eigen::VectorXd* rotor_velo
 	error->twist.twist.angular.x = angular_rate_error(0);
 	error->twist.twist.angular.y = angular_rate_error(1);
 	error->twist.twist.angular.z = angular_rate_error(2);
-	/*
-	std::cout << "control_input->orientation.x()\n" << control_input->pose.pose.orientation.x << std::endl;
-	std::cout << "control_input->orientation.y()\n" << control_input->pose.pose.orientation.y << std::endl;
-	std::cout << "control_input->orientation.z()\n" << control_input->pose.pose.orientation.z << std::endl;
-	std::cout << "control_input->orientation.w()\n" << control_input->pose.pose.orientation.w << std::endl;
-	*/
+
 	// get moment_thrust from subscribe control input
 	Eigen::Vector4d moment_thrust;
 	
@@ -85,20 +80,9 @@ void LeePositionController::CalculateRotorVelocities(Eigen::VectorXd* rotor_velo
 	moment_thrust(1) = control_input->pose.pose.orientation.y;
 	moment_thrust(2) = control_input->pose.pose.orientation.z;
 	moment_thrust(3) = control_input->pose.pose.orientation.w;
-	/*
-	moment_thrust(0) = 0;
-	moment_thrust(1) = 0;
-	moment_thrust(2) = 0.1;
-	moment_thrust(3) = 0;
-	*/
-	//std::cout << "moment_thrust\n" << moment_thrust << std::endl;
-	//std::cout << "moment_thrust_output\n" << moment_thrust << "\n\n";
 
 	*rotor_velocities = moment_thrust_to_rotor_velocities_ * moment_thrust;
-	//*rotor_velocities = rotor_velocities->cwiseMax(Eigen::VectorXd::Zero(rotor_velocities->rows())); //revise by chiacheng
 	*rotor_velocities = rotor_velocities->cwiseSqrt();
-
-	//std::cout << "*rotor_velocities\n" << *rotor_velocities << std::endl;
 }
 
 void LeePositionController::SetOdometry(const EigenOdometry& odometry)
