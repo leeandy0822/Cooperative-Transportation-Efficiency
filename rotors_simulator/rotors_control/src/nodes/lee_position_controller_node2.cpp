@@ -140,7 +140,7 @@ namespace rotors_control
 		{
 			if (i == 0 || i == 2)
 			{
-				actuator_msg->angular_velocities.push_back(sqrt(0.8) * ref_rotor_velocities[i]); // efficiency
+				actuator_msg->angular_velocities.push_back(sqrt(1) * ref_rotor_velocities[i]); // efficiency
 			}
 			else
 			{

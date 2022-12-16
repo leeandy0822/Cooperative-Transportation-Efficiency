@@ -110,10 +110,7 @@ public:
 	~PayloadPositionController();
 	void CalculateControlInput(nav_msgs::Odometry* iris1_control_input, nav_msgs::Odometry* iris2_control_input, nav_msgs::Odometry* error, Eigen::Vector4d* iris1_control_input_multiarray, Eigen::Vector4d* iris2_control_input_multiarray);
 	void ComputeUstar(Eigen::MatrixXd* u_star, Eigen::Vector4d* desired_control_input);
-	void ComputeQuadStates(Eigen::Vector3d* x1 ,Eigen::Vector3d* x2 ,Eigen::Vector3d* v1,Eigen::Vector3d* v2);
 	void SetOdometry(const EigenOdometry& odometry);
-	void SetFTsensor1(const geometry_msgs::WrenchStampedConstPtr &ft1_msg);
-	void SetFTsensor2(const geometry_msgs::WrenchStampedConstPtr &ft2_msg);
 	void SetTrajectoryPoint(const mav_msgs::EigenTrajectoryPoint& command_trajectory);
 	
 
@@ -135,11 +132,6 @@ public:
 
 	mav_msgs::EigenTrajectoryPoint command_trajectory_;
 	EigenOdometry odometry_;
-
-	Eigen::Vector3d F1;
-	Eigen::Vector3d F2;
-	Eigen::Vector3d T1;
-	Eigen::Vector3d T2;
 
 	void ComputeDesiredForce(Eigen::Vector3d* force_control_input);
 	void ComputeDesiredMoment(const Eigen::Vector3d& force_control_input, Eigen::Vector3d* moment_control_input);

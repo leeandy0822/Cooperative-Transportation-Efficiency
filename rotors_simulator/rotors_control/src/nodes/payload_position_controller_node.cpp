@@ -18,20 +18,12 @@ PayloadPositionControllerNode::PayloadPositionControllerNode(const
 	cmd_sub_ = nh_.subscribe(
 	                   "/payload/desired_trajectory", 1,
 	                   &PayloadPositionControllerNode::CommandCallback, this);
-	/*
-	cmd_multi_dof_joint_trajectory_sub_ = nh_.subscribe(
-	                mav_msgs::default_topics::COMMAND_TRAJECTORY, 1,
-	                &PayloadPositionControllerNode::MultiDofJointTrajectoryCallback, this);
-	*/
+
 	odometry_sub_ = nh_.subscribe("/payload/odometry", 1,
 	                              &PayloadPositionControllerNode::OdometryCallback, this);
 
-	ft_sensor1_sub_ = nh_.subscribe("/payload_joint1_ft_sensor", 1,
-	                              &PayloadPositionControllerNode::FTsensor1Callback, this);
-	ft_sensor2_sub_ = nh_.subscribe("/payload_joint2_ft_sensor", 1,
-	                              &PayloadPositionControllerNode::FTsensor2Callback, this);			
-
 	error_pub_ = nh_.advertise<nav_msgs::Odometry>("/system/error", 1);
+	
 	// publish by orientation
 	iris1_control_input_pub_ = nh_.advertise<nav_msgs::Odometry>("/iris1_control_input", 1);
 	iris2_control_input_pub_ = nh_.advertise<nav_msgs::Odometry>("/iris2_control_input", 1);
@@ -108,45 +100,6 @@ void PayloadPositionControllerNode::CommandCallback(
 	// std::cout << "In payload CommandCallback function" << std::endl;
 }
 
-void PayloadPositionControllerNode::MultiDofJointTrajectoryCallback(
-        const trajectory_msgs::MultiDOFJointTrajectoryConstPtr& msg)
-{
-	// Clear all pending commands.
-	command_timer_.stop();
-	commands_.clear();
-	command_waiting_times_.clear();
-
-	const size_t n_commands = msg->points.size();
-
-	if(n_commands < 1) {
-		ROS_WARN_STREAM("Got MultiDOFJointTrajectory message, but message has no points.");
-		return;
-	}
-
-	mav_msgs::EigenTrajectoryPoint eigen_reference;
-	mav_msgs::eigenTrajectoryPointFromMsg(msg->points.front(), &eigen_reference);
-	commands_.push_front(eigen_reference);
-
-	for (size_t i = 1; i < n_commands; ++i) {
-		const trajectory_msgs::MultiDOFJointTrajectoryPoint& reference_before = msg->points[i-1];
-		const trajectory_msgs::MultiDOFJointTrajectoryPoint& current_reference = msg->points[i];
-
-		mav_msgs::eigenTrajectoryPointFromMsg(current_reference, &eigen_reference);
-
-		commands_.push_back(eigen_reference);
-		command_waiting_times_.push_back(current_reference.time_from_start - reference_before.time_from_start);
-	}
-
-	// We can trigger the first command immediately.
-	payload_position_controller_.SetTrajectoryPoint(commands_.front());
-	commands_.pop_front();
-
-	if (n_commands > 1) {
-		command_timer_.setPeriod(command_waiting_times_.front());
-		command_waiting_times_.pop_front();
-		command_timer_.start();
-	}
-}
 
 void PayloadPositionControllerNode::TimedCommandCallback(const ros::TimerEvent& e)
 {
@@ -189,9 +142,10 @@ void PayloadPositionControllerNode::OdometryCallback(const nav_msgs::OdometryCon
 	Setmsg(tmp);
 
 	// Set_multiarray_msg
-	Set_multiarray_msg1(iris1_control_input_vec);
-	Set_multiarray_msg2(iris2_control_input_vec);
+	Set_multiarray_msg(iris1_control_input_vec, multiarray_msg1);
+	Set_multiarray_msg(iris2_control_input_vec, multiarray_msg2);
 
+	
 	error_pub_.publish(payload_error);
 	iris1_control_input_pub_.publish(iris1_control_input);
 	iris2_control_input_pub_.publish(iris2_control_input);
@@ -200,14 +154,7 @@ void PayloadPositionControllerNode::OdometryCallback(const nav_msgs::OdometryCon
 	iris2_control_input_multiarray_pub_.publish(multiarray_msg2);
 
 }
-void PayloadPositionControllerNode::FTsensor1Callback(const geometry_msgs::WrenchStampedConstPtr& ft1_msg)
-{
-	payload_position_controller_.SetFTsensor1(ft1_msg);
-}
-void PayloadPositionControllerNode::FTsensor2Callback(const geometry_msgs::WrenchStampedConstPtr& ft2_msg)
-{
-	payload_position_controller_.SetFTsensor2(ft2_msg);
-}
+
 void PayloadPositionControllerNode::Setmsg(Eigen::Vector3d tmp2){
 	std::vector<double> vec1 = {tmp2(0),tmp2(1),tmp2(2)};
 	// copy in the data
@@ -215,18 +162,12 @@ void PayloadPositionControllerNode::Setmsg(Eigen::Vector3d tmp2){
 	msg.data.insert(msg.data.end(), vec1.begin(), vec1.end());
 }
 
-void PayloadPositionControllerNode::Set_multiarray_msg1(Eigen::Vector4d tmp){
-	std::vector<double> vec1 = {tmp(0),tmp(1),tmp(2),tmp(3)};
-	// copy in the data
-	multiarray_msg1.data.clear();
-	multiarray_msg1.data.insert(multiarray_msg1.data.end(), vec1.begin(), vec1.end());
-}
 
-void PayloadPositionControllerNode::Set_multiarray_msg2(Eigen::Vector4d tmp){
+void PayloadPositionControllerNode::Set_multiarray_msg(Eigen::Vector4d tmp, std_msgs::Float64MultiArray& vec_msg){
 	std::vector<double> vec1 = {tmp(0),tmp(1),tmp(2),tmp(3)};
 	// copy in the data
-	multiarray_msg2.data.clear();
-	multiarray_msg2.data.insert(multiarray_msg2.data.end(), vec1.begin(), vec1.end());
+	vec_msg.data.clear();
+	vec_msg.data.insert(vec_msg.data.end(), vec1.begin(), vec1.end());
 }
 
 
@@ -239,12 +180,6 @@ int main(int argc, char** argv)
 	ros::NodeHandle nh;
 	ros::NodeHandle private_nh("~");
 	rotors_control::PayloadPositionControllerNode payload_position_controller_node(nh, private_nh);
-
-	// this node will call subscribe function as long as someone publish data to topic
-	// PayloadPositionControllerNode::CommandCallback()
-	// PayloadPositionControllerNode::MultiDofJointTrajectoryCallback()
-	// PayloadPositionControllerNode::OdometryCallback()
-
 	ros::spin();
 
 	return 0;

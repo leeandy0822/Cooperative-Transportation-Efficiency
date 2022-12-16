@@ -54,14 +54,11 @@ nav_msgs::Odometry* iris2_control_input, nav_msgs::Odometry* error, Eigen::Vecto
 	Eigen::Vector4d iris1_thrust_moment,iris2_thrust_moment;
 	sys_thrust_moment(0) = thrust;
 	sys_thrust_moment.block<3, 1>(1, 0) = moment_control_input;
-	//std::cout << "sys_thrust_moment\n" << sys_thrust_moment << std::endl;
 	
 
 	// compute iris1 and iris2 control input algorithm
 	Eigen::MatrixXd u_star;
-	Eigen::Vector3d x1,x2,v1,v2;
 	ComputeUstar(&u_star, &sys_thrust_moment);
-	ComputeQuadStates(& x1 ,& x2 ,& v1,& v2);
 	//std::cout << u_star << std::endl;
 	iris1_thrust_moment = u_star.block<4, 1>(0, 0);
 	iris2_thrust_moment = u_star.block<4, 1>(4, 0);
@@ -84,90 +81,22 @@ nav_msgs::Odometry* iris2_control_input, nav_msgs::Odometry* error, Eigen::Vecto
 
 }
 
-void PayloadPositionController::ComputeQuadStates(Eigen::Vector3d* x1 ,Eigen::Vector3d* x2 ,Eigen::Vector3d* v1,Eigen::Vector3d* v2)
-{
-	PhysicsParameters phystate;
-	float px = odometry_.position.x();
-	float py = odometry_.position.y();
-	float pz = odometry_.position.z();
-	float v_px = odometry_.velocity.x();
-	float v_py = odometry_.velocity.y();
-	float v_pz = odometry_.velocity.z();
-	float w_px = odometry_.angular_velocity.x();
-	float w_py = odometry_.angular_velocity.y();
-	float w_pz = odometry_.angular_velocity.z();
-	
-	//Eigen::Vector3d x1,x2,v1,v2,a1,a2;
-	Eigen::Vector3d rp1(phystate.x_q1 - phystate.x_p ,phystate.y_q1 - phystate.y_p ,phystate.z_q1 - phystate.z_p - phystate.z_offset);
-	//Eigen::Vector3d rp2(phystate.x_q2 - phystate.x_p ,phystate.y_q2 - phystate.y_p ,phystate.z_q2 - phystate.z_p);
-	Eigen::Vector3d rp2(phystate.x_q2 - phystate.x_p ,phystate.y_q2 - phystate.y_p ,phystate.z_q2 - phystate.z_p - phystate.z_offset);
-	Eigen::Vector3d xp(px, py, pz);
-	Eigen::Vector3d vp(v_px, v_py, v_pz);
-	Eigen::Vector3d wp(w_px, w_py, w_pz);
-	//Eigen::Vector3d ap(x,y,z);
-	*x1 = xp + rp1;
-	*x2 = xp + rp2;
-	*v1 = vp + wp.cross(rp1);
-	*v2 = vp + wp.cross(rp2);
-
-	Eigen::Matrix3d R = odometry_.orientation.toRotationMatrix();
-	Eigen::Matrix3d d_matrix1 , d_matrix2;
-	d_matrix1.setZero(3,3);
-	d_matrix2.setZero(3,3);
-	PhysicsParameters phy;
-	Eigen::Matrix3d Jp;
-	d_matrix1 << 0,    0,     0,
-							0,    0, -0.6,
-							0, 0.6,     0;
-	d_matrix2 << 0,     0,    0,
-							0,     0, 0.6,
-							0, -0.6,    0;			
-
-	Jp <<  phy.Ixx_p,0,0,
-				0,phy.Iyy_p,0,
-				0,0,phy.Izz_p;
-	/*
-	std::cout << " -------Jp*w_dot_p------"<<std::endl;
-	std::cout <<(d_matrix1 * R.inverse() * F1 + d_matrix2 * R.inverse() * F2) + T1 + T2 - wp.cross(Jp*wp)<<std::endl;
-	*/
-	// Mp term
-	/*
-	std::cout << " -------Mp------"<<std::endl;
-	std::cout<<d_matrix1 * R.inverse() * F1 + d_matrix2 * R.inverse() * F2 <<std::endl;
-	*/
-
-	//*a1 = vp + ap.cross(rp1) + wp.cross(wp.cross(rp1));
-	//*a2 = vp + ap.cross(rp2) + wp.cross(wp.cross(rp2));
-	//std::cout << "------- x1_quads-------" <<std::endl<< * x1 <<std::endl;
-	//std::cout << "------- x2_quads-------" <<std::endl<< * x2 <<std::endl;
-	//std::cout << "------- v1_quads-------" <<std::endl<< * v1 <<std::endl;
-	//std::cout << "------- v2_quads-------" <<std::endl<< * v2 <<std::endl;
-	//* a_quads = v_p + .cross(r_p) + w_p.cross(w_p.cross(r_p));
-}
-
 void PayloadPositionController::ComputeUstar(Eigen::MatrixXd* u_star, Eigen::Vector4d* desired_control_input)
 {
 	//assert(u_star);
 	Eigen::MatrixXd A(4, 8); 
 	Eigen::MatrixXd H(8, 8);
 	Eigen::MatrixXd A_T(8 ,4);
-	//Eigen::MatrixXf u_star(8 ,1);
-	//Eigen::MatrixXd desire_control_input(4 ,1);
+
 	A.setZero(4,8);
 	H.setZero(8,8);
 	A_T.setZero(8,4);
-	
-	float w = odometry_.orientation.w();
-	float x = odometry_.orientation.x();
-	float y = odometry_.orientation.y();
-	float z = odometry_.orientation.z();
-	float A_yaw = atan2((2.0 * (w * z + x * y)),(1.0 - 2.0 * (y*y + z* z)));
-	// std::cout << A_yaw << std::endl;
-	//desired_control_input << 1.0,2.0,3.0,4.0;
-	A <<    1 ,                    0,                   0,        0,  1,                    0,                   0, 0, 
-            0 ,              cos(A_yaw),           -sin(A_yaw),   0,  0,  cos(A_yaw), -sin(A_yaw), 0,
-         -0.6 ,              sin(A_yaw),            cos(A_yaw),   0,  0.6,  sin(A_yaw),  cos(A_yaw), 0,
-            0 ,                    0,                   0,        1,  0,                    0,                    0, 1; 
+
+	A <<    1 ,        0,       0,        0,       1,          0,        0,      0, 
+            0 ,        1,       0,        0,       0,          1,        0,      0,
+         -0.6 ,        0,       1,        0,       0.6,        0,        1,      0,
+            0 ,        0,       0,        1,       0,          0,        0,      1; 
+
 	A_T = A.transpose();
 	H<< 	sqrt(2),            0,         0,          0,           0,            0,           0,           0,
                           0,  sqrt(2),          0,          0,           0,            0,           0,           0,
@@ -197,20 +126,8 @@ void PayloadPositionController::SetOdometry(const EigenOdometry& odometry)
 	odometry_ = odometry;
 	odometry_.position.z() = odometry_.position.z()+phy.z_offset;
 }
-void PayloadPositionController::SetFTsensor1(const geometry_msgs::WrenchStampedConstPtr &ft1_msg)
-{
-	F1 << ft1_msg->wrench.force.x,ft1_msg->wrench.force.y,ft1_msg->wrench.force.z;
-	//std::cout << "-----F1----"<< std::endl<< F1 << std::endl;
-	T1 << ft1_msg->wrench.torque.x, ft1_msg->wrench.torque.y , ft1_msg->wrench.torque.z;
-	//std::cout << "-----T1----"<< std::endl<< T1 << std::endl;
-}
-void PayloadPositionController::SetFTsensor2(const geometry_msgs::WrenchStampedConstPtr & ft2_msg)
-{
-	F2 << ft2_msg->wrench.force.x,ft2_msg->wrench.force.y,ft2_msg->wrench.force.z;
-	//std::cout << "-----F2----"<< std::endl<< F2 << std::endl;
-	T2 << ft2_msg->wrench.torque.x, ft2_msg->wrench.torque.y , ft2_msg->wrench.torque.z;
-	//std::cout << "-----T2----"<< std::endl<< T2 << std::endl;
-}
+
+
 
 void PayloadPositionController::SetTrajectoryPoint(const mav_msgs::EigenTrajectoryPoint& command_trajectory)
 {
@@ -247,8 +164,7 @@ void PayloadPositionController::ComputeDesiredForce(Eigen::Vector3d* force_contr
 	                       - phy.m_system * command_trajectory_.acceleration_W;
 }
 
-// Implementation from the T. Payload et al. paper
-// Control of complex maneuvers for a quadrotor UAV using geometric methods on SE(3)
+
 void PayloadPositionController::ComputeDesiredMoment(const Eigen::Vector3d& force_control_input,
                 Eigen::Vector3d* moment_control_input)
 {

@@ -41,11 +41,9 @@ private:
 
 	// subscribers
 	ros::Subscriber cmd_trajectory_sub_;
-	ros::Subscriber cmd_multi_dof_joint_trajectory_sub_;
 	ros::Subscriber cmd_sub_;
 	ros::Subscriber odometry_sub_;
-	ros::Subscriber ft_sensor1_sub_;
-	ros::Subscriber ft_sensor2_sub_;
+
 
 	ros::Publisher motor_velocity_reference_pub_;
 	ros::Publisher position_error_pub_;
@@ -67,20 +65,13 @@ private:
 
 	void TimedCommandCallback(const ros::TimerEvent& e);
 
-	void MultiDofJointTrajectoryCallback(
-	        const trajectory_msgs::MultiDOFJointTrajectoryConstPtr& trajectory_reference_msg);
-
 	void CommandCallback(
 	        const trajectory_msgs::MultiDOFJointTrajectoryPointConstPtr& cmd_msg);
 
 	void OdometryCallback(const nav_msgs::OdometryConstPtr& odometry_msg);
 
-	void FTsensor1Callback(const geometry_msgs::WrenchStampedConstPtr& ft1_msg);
-	void FTsensor2Callback(const geometry_msgs::WrenchStampedConstPtr& ft2_msg);
-
 	void Setmsg(Eigen::Vector3d tmp2);
-	void Set_multiarray_msg1(Eigen::Vector4d tmp);
-	void Set_multiarray_msg2(Eigen::Vector4d tmp);
+	void Set_multiarray_msg(Eigen::Vector4d tmp, std_msgs::Float64MultiArray& vec_msg);
 };
 }
 

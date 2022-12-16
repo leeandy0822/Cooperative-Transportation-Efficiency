@@ -140,7 +140,7 @@ void LeePositionControllerNode::ControlInputCallback(
 	for (int i = 0; i < ref_rotor_velocities.size(); i++)
 	{
 		if(i==0 || i==2){
-			actuator_msg->angular_velocities.push_back(sqrt(0.8)*ref_rotor_velocities[i]); //efficiency
+			actuator_msg->angular_velocities.push_back(sqrt(1)*ref_rotor_velocities[i]); //efficiency
 		}else{
 			actuator_msg->angular_velocities.push_back(ref_rotor_velocities[i]); //efficiency
 		}
@@ -197,11 +197,6 @@ int main(int argc, char** argv)
 	ros::NodeHandle nh;
 	ros::NodeHandle private_nh("~");
 	rotors_control::LeePositionControllerNode lee_position_controller_node(nh, private_nh);
-
-	// this node will call subscribe function as long as someone publish data to topic
-	// LeePositionControllerNode::CommandCallback()
-	// LeePositionControllerNode::MultiDofJointTrajectoryCallback()
-	// LeePositionControllerNode::OdometryCallback()
 
 	ros::spin();
 

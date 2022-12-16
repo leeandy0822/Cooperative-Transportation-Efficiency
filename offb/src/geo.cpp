@@ -104,13 +104,13 @@ int main(int argc, char **argv)
 	p9.acc << 0, 0, 0;
 	p9.yaw = 0;
 
-	path.push_back(segments(p1, p2, 5));
-	path.push_back(segments(p2, p3, 4));
-	path.push_back(segments(p3, p4, 4));
-	path.push_back(segments(p4, p5, 4));
-	path.push_back(segments(p5, p6, 4));
-	path.push_back(segments(p6, p7, 4));
-	path.push_back(segments(p7, p8, 4));
+	path.push_back(segments(p1, p2, 20));
+	path.push_back(segments(p2, p3, 8));
+	path.push_back(segments(p3, p4, 8));
+	path.push_back(segments(p4, p5, 8));
+	path.push_back(segments(p5, p6, 8));
+	path.push_back(segments(p6, p7, 8));
+	path.push_back(segments(p7, p8, 8));
 
 	
 	data = plan.get_profile(path, path.size(), sample);

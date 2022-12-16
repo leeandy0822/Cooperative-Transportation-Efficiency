@@ -29,13 +29,12 @@ model_name_2: 'cube2'
 link_name_2: 'link'"
     """
 
-
     rospy.loginfo("Attaching UAV1 and payload")
     req = AttachRequest()
     req.model_name_1 = "iris1"
     req.link_name_1 = "iris1/base_link"
     req.model_name_2 = "payload"
-    req.link_name_2 = "payload_link1_box"
+    req.link_name_2 = "payload_link_1"
 
     attach_srv.call(req)
 
@@ -44,43 +43,62 @@ link_name_2: 'link'"
     req.model_name_1 = "iris2"
     req.link_name_1 = "iris2/base_link"
     req.model_name_2 = "payload"
-    req.link_name_2 = "payload_link2_box"
-
-    attach_srv.call(req)
-
-    rospy.loginfo("Attaching UAV3 and payload")
-    req = AttachRequest()
-    req.model_name_1 = "iris3"
-    req.link_name_1 = "iris3/base_link"
-    req.model_name_2 = "payload"
-    req.link_name_2 = "payload_link3_box"
-
-    attach_srv.call(req)
-
-    rospy.loginfo("Attaching UAV4 and payload")
-    req = AttachRequest()
-    req.model_name_1 = "iris4"
-    req.link_name_1 = "iris4/base_link"
-    req.model_name_2 = "payload"
-    req.link_name_2 = "payload_link4_box"
-
-    attach_srv.call(req)
-
-    rospy.loginfo("Attaching sensor and payload")
-    req = AttachRequest()
-    req.model_name_1 = "sensor_pack"
-    req.link_name_1 = "payload_sensor_imu"
-    req.model_name_2 = "payload"
-    req.link_name_2 = "payload_rec"
+    req.link_name_2 = "payload_link_2"
 
     attach_srv.call(req)
 
 
-    rospy.loginfo("Attaching payload item and payload")
-    req = AttachRequest()
-    req.model_name_1 = "payload_item"
-    req.link_name_1 = "payload_item_box"
-    req.model_name_2 = "payload"
-    req.link_name_2 = "payload_rec"
+    # rospy.loginfo("Attaching UAV1 and payload")
+    # req = AttachRequest()
+    # req.model_name_1 = "iris1"
+    # req.link_name_1 = "iris1/base_link"
+    # req.model_name_2 = "payload"
+    # req.link_name_2 = "payload_link1_box"
 
-    attach_srv.call(req)
+    # attach_srv.call(req)
+
+    # rospy.loginfo("Attaching UAV2 and payload")
+    # req = AttachRequest()
+    # req.model_name_1 = "iris2"
+    # req.link_name_1 = "iris2/base_link"
+    # req.model_name_2 = "payload"
+    # req.link_name_2 = "payload_link2_box"
+
+    # attach_srv.call(req)
+
+    # rospy.loginfo("Attaching UAV3 and payload")
+    # req = AttachRequest()
+    # req.model_name_1 = "iris3"
+    # req.link_name_1 = "iris3/base_link"
+    # req.model_name_2 = "payload"
+    # req.link_name_2 = "payload_link3_box"
+
+    # attach_srv.call(req)
+
+    # rospy.loginfo("Attaching UAV4 and payload")
+    # req = AttachRequest()
+    # req.model_name_1 = "iris4"
+    # req.link_name_1 = "iris4/base_link"
+    # req.model_name_2 = "payload"
+    # req.link_name_2 = "payload_link4_box"
+
+    # attach_srv.call(req)
+
+    # rospy.loginfo("Attaching sensor and payload")
+    # req = AttachRequest()
+    # req.model_name_1 = "sensor_pack"
+    # req.link_name_1 = "payload_sensor_imu"
+    # req.model_name_2 = "payload"
+    # req.link_name_2 = "payload_rec"
+
+    # attach_srv.call(req)
+
+
+    # rospy.loginfo("Attaching payload item and payload")
+    # req = AttachRequest()
+    # req.model_name_1 = "payload_item"
+    # req.link_name_1 = "payload_item_box"
+    # req.model_name_2 = "payload"
+    # req.link_name_2 = "payload_rec"
+
+    # attach_srv.call(req)
